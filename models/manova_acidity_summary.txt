@@ -1,0 +1,19 @@
+MANOVA formula:
+cbind(fixed.acidity, volatile.acidity) ~ wine_type
+
+Acidity variables used:
+[1] "fixed.acidity"    "volatile.acidity"
+
+Pillai test summary:
+            Df  Pillai approx F num Df den Df    Pr(>F)    
+wine_type    1 0.54779   3145.9      2   5194 < 2.2e-16 ***
+Residuals 5195                                             
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Wilks test summary:
+            Df   Wilks approx F num Df den Df    Pr(>F)    
+wine_type    1 0.45221   3145.9      2   5194 < 2.2e-16 ***
+Residuals 5195                                             
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
