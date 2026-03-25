@@ -20,12 +20,6 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
     call. = FALSE
   )
 }
-if (!requireNamespace("class", quietly = TRUE)) {
-  stop(
-    "Package 'class' is required but not installed. Install with: install.packages('class')",
-    call. = FALSE
-  )
-}
 
 if (length(args) == 0) {
   input_path <- default_input
@@ -96,31 +90,6 @@ metric_frame <- function(actual, predicted) {
   )
 }
 
-class_weights <- function(y) {
-  tab <- table(y)
-  inv_freq <- 1 / as.numeric(tab)
-  names(inv_freq) <- names(tab)
-  as.numeric(inv_freq[as.character(y)])
-}
-
-trim_outliers_iqr <- function(train_df_in, feature_cols_in, iqr_mult = 2.5, max_allowed_flags = 2) {
-  q1 <- vapply(train_df_in[, feature_cols_in, drop = FALSE], quantile, numeric(1), probs = 0.25)
-  q3 <- vapply(train_df_in[, feature_cols_in, drop = FALSE], quantile, numeric(1), probs = 0.75)
-  iqr <- q3 - q1
-  lower <- q1 - iqr_mult * iqr
-  upper <- q3 + iqr_mult * iqr
-
-  flags <- sapply(
-    feature_cols_in,
-    function(f) train_df_in[[f]] < lower[[f]] | train_df_in[[f]] > upper[[f]]
-  )
-  if (is.vector(flags)) {
-    flags <- matrix(flags, ncol = 1)
-  }
-  keep <- rowSums(flags) <= max_allowed_flags
-  train_df_in[keep, , drop = FALSE]
-}
-
 feature_cols <- setdiff(required_cols, "quality")
 train_features <- train_df[, feature_cols, drop = FALSE]
 test_features <- test_df[, feature_cols, drop = FALSE]
@@ -142,7 +111,7 @@ x_test_target_inter <- model.matrix(interaction_formula, data = test_features)[,
 
 fit_glmnet_variant <- function(name, x_train, x_test, alpha_value, train_y, test_y) {
   y_train <- train_y
-  y_test <- test_df$quality
+  y_test <- test_y
 
   min_class_count <- min(as.numeric(table(y_train)))
   nfolds <- max(3, min(5, min_class_count))
@@ -194,72 +163,6 @@ for (a in alpha_grid) {
     alpha_value = a,
     train_y = train_df$quality,
     test_y = test_df$quality
-  )
-  r <- r + 1
-}
-
-# Outlier-trimmed training set (train-only), rerun only the best candidate family quickly
-train_trim <- trim_outliers_iqr(train_df, feature_cols, iqr_mult = 2.5, max_allowed_flags = 2)
-train_trim_features <- train_trim[, feature_cols, drop = FALSE]
-x_train_target_inter_trim <- model.matrix(interaction_formula, data = train_trim_features)[, -1, drop = FALSE]
-
-for (a in c(0.25, 0.5, 0.75, 1)) {
-  results[[r]] <- fit_glmnet_variant(
-    name = sprintf("glmnet_target_inter_alpha_%s_train_trimmed", a),
-    x_train = x_train_target_inter_trim,
-    x_test = x_test_target_inter,
-    alpha_value = a,
-    train_y = train_trim$quality,
-    test_y = test_df$quality
-  )
-  r <- r + 1
-}
-
-# LDA / QDA on main effects (fast alternative model families)
-lda_formula <- as.formula(paste("quality ~", paste(feature_cols, collapse = " + ")))
-lda_fit <- MASS::lda(lda_formula, data = train_df)
-lda_pred <- predict(lda_fit, newdata = test_df)$class
-lda_metrics <- metric_frame(test_df$quality, lda_pred)
-results[[r]] <- cbind(
-  data.frame(model_name = "lda_main", alpha = NA_real_, lambda_min = NA_real_),
-  lda_metrics
-)
-r <- r + 1
-
-qda_fit <- tryCatch(MASS::qda(lda_formula, data = train_df), error = function(e) NULL)
-if (!is.null(qda_fit)) {
-  qda_pred <- predict(qda_fit, newdata = test_df)$class
-  qda_metrics <- metric_frame(test_df$quality, qda_pred)
-  results[[r]] <- cbind(
-    data.frame(model_name = "qda_main", alpha = NA_real_, lambda_min = NA_real_),
-    qda_metrics
-  )
-  r <- r + 1
-}
-
-# kNN (scaled), quick grid
-scale_fit <- function(x_train, x_test) {
-  mu <- colMeans(x_train)
-  sdv <- apply(x_train, 2, sd)
-  sdv[sdv == 0] <- 1
-  list(
-    x_train = scale(x_train, center = mu, scale = sdv),
-    x_test = scale(x_test, center = mu, scale = sdv)
-  )
-}
-
-scaled <- scale_fit(as.matrix(train_features), as.matrix(test_features))
-for (k in c(5, 15, 25, 35)) {
-  knn_pred <- class::knn(
-    train = scaled$x_train,
-    test = scaled$x_test,
-    cl = train_df$quality,
-    k = k
-  )
-  knn_metrics <- metric_frame(test_df$quality, knn_pred)
-  results[[r]] <- cbind(
-    data.frame(model_name = sprintf("knn_scaled_k_%d", k), alpha = NA_real_, lambda_min = NA_real_),
-    knn_metrics
   )
   r <- r + 1
 }
