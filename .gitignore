@@ -1,0 +1,15 @@
+## R / outputs
+.Rhistory
+.RData
+.Rproj.user/
+
+## Model artifacts / generated results
+models/
+data/processed/
+
+## Python cache (accidental)
+__pycache__/
+*.py[cod]
+
+## OS files
+.DS_Store

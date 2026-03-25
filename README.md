@@ -86,6 +86,24 @@ Fast “what helps accuracy?” benchmark that stays close to the original evalu
 Rscript scripts/quick_improvements.R
 ```
 
+### `scripts/train_outlier_robust_glmnet.R`
+Trains a multinomial `glmnet` model that **explicitly accounts for outliers** via:
+- **winsorization** of numeric predictors (train-derived 1%/99% caps)
+- **robust scaling** using median/MAD (train-derived)
+
+It then fits an elastic-net multinomial model with **pairwise interactions** and reports hold-out test accuracy.
+
+- **Input**: `train.csv`
+- **Outputs**:
+  - `models/robust_glmnet_model.rds`
+  - `models/robust_glmnet_metrics.csv`
+  - `models/robust_glmnet_predictions.csv`
+- **Run**:
+
+```bash
+Rscript scripts/train_outlier_robust_glmnet.R
+```
+
 ### `scripts/run_manova_acidity.R`
 Runs a **MANOVA** to test whether wine type (red vs white) differs across the multivariate set of acidity variables found in the dataset (columns containing `"acidity"`).
 

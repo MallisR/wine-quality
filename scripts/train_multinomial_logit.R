@@ -21,6 +21,8 @@ suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))
 
+source(file.path("scripts", "_common.R"))
+
 default_input <- "train.csv"
 default_model_path <- file.path("models", "multinomial_logit_model.rds")
 default_metrics_path <- file.path("models", "multinomial_logit_metrics.csv")
@@ -60,66 +62,23 @@ if (!file.exists(input_path)) {
   stop(sprintf("Input file not found: %s", input_path), call. = FALSE)
 }
 
-df <- read.csv(input_path, sep = ";", header = TRUE, check.names = FALSE)
-
 required_cols <- c(
   "fixed.acidity", "volatile.acidity", "citric.acid", "residual.sugar",
   "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
   "pH", "sulphates", "alcohol", "quality", "is_red"
 )
 
-missing_cols <- setdiff(required_cols, names(df))
-if (length(missing_cols) > 0) {
-  stop(
-    sprintf("Missing required columns: %s", paste(missing_cols, collapse = ", ")),
-    call. = FALSE
-  )
-}
-
 feature_cols <- setdiff(required_cols, "quality")
 
-df <- df[complete.cases(df[, required_cols]), required_cols]
+df <- load_train_data(input_path, required_cols)
 df$quality <- as.factor(df$quality)
 
-set.seed(42)
-idx <- sample.int(nrow(df), size = floor(0.8 * nrow(df)))
-train_df <- df[idx, ]
-test_df <- df[-idx, ]
+splits <- split_train_test(df, train_frac = 0.8, seed = 42)
+train_df <- splits$train
+test_df <- splits$test
 
 build_metrics <- function(actual, predicted) {
-  labels <- levels(actual)
-  cm <- table(
-    actual = factor(actual, levels = labels),
-    predicted = factor(predicted, levels = labels)
-  )
-
-  class_precision <- numeric(length(labels))
-  class_recall <- numeric(length(labels))
-  class_f1 <- numeric(length(labels))
-
-  for (i in seq_along(labels)) {
-    tp <- cm[i, i]
-    fp <- sum(cm[, i]) - tp
-    fn <- sum(cm[i, ]) - tp
-
-    precision <- if ((tp + fp) == 0) 0 else tp / (tp + fp)
-    recall <- if ((tp + fn) == 0) 0 else tp / (tp + fn)
-    f1 <- if ((precision + recall) == 0) 0 else 2 * precision * recall / (precision + recall)
-
-    class_precision[i] <- precision
-    class_recall[i] <- recall
-    class_f1[i] <- f1
-  }
-
-  data.frame(
-    metric = c("accuracy", "macro_precision", "macro_recall", "macro_f1"),
-    value = c(
-      mean(predicted == actual),
-      mean(class_precision),
-      mean(class_recall),
-      mean(class_f1)
-    )
-  )
+  metric_multiclass(actual, predicted)
 }
 
 build_predictions_df <- function(actual, predicted) {
@@ -170,9 +129,7 @@ lasso_metrics <- build_metrics(test_actual, lasso_pred)
 lasso_predictions <- build_predictions_df(test_actual, lasso_pred)
 
 model_dir <- dirname(default_model_path)
-if (!dir.exists(model_dir)) {
-  dir.create(model_dir, recursive = TRUE)
-}
+ensure_dir(model_dir)
 
 saveRDS(multinom_fit, file = default_model_path)
 write.csv(multinom_metrics, file = default_metrics_path, row.names = FALSE)
