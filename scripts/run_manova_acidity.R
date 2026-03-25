@@ -1,5 +1,20 @@
 #!/usr/bin/env Rscript
 
+# Purpose:
+# - MANOVA test: do red vs white wines differ across the multivariate acidity profile?
+# - Uses all columns containing "acidity" as the multivariate response and tests group
+#   differences by `is_red` (converted to `wine_type` factor).
+#
+# Inputs:
+# - `train.csv` (semicolon-delimited), must include `is_red` and acidity columns
+#
+# Outputs (written to `models/`):
+# - `manova_acidity_test.csv` (Pillai + Wilks stats)
+# - `manova_acidity_summary.txt` (full printed MANOVA summaries)
+#
+# Run:
+# - Rscript scripts/run_manova_acidity.R [train_csv_path]
+
 suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))

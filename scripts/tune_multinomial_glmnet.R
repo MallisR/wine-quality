@@ -1,5 +1,20 @@
 #!/usr/bin/env Rscript
 
+# Purpose:
+# - Benchmark/tune multinomial glmnet models for predicting `quality`, comparing:
+#   - main effects vs all pairwise interactions (~(.)^2)
+#   - ridge (alpha=0), lasso (alpha=1), elastic net (alpha=0.5)
+#
+# Inputs:
+# - `train.csv` (semicolon-delimited)
+#
+# Outputs (written to `models/`):
+# - `multinomial_glmnet_tuning_results.csv` (leaderboard)
+# - `best_multinomial_glmnet_model.rds` (best cv.glmnet object + metadata)
+#
+# Run:
+# - Rscript scripts/tune_multinomial_glmnet.R [train_csv_path]
+
 suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))

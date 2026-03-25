@@ -1,5 +1,21 @@
 #!/usr/bin/env Rscript
 
+# Purpose:
+# - Quick benchmark to improve hold-out test accuracy for predicting `quality`.
+# - Tries:
+#   - glmnet alpha grid on main effects
+#   - glmnet alpha grid with a small set of targeted interaction terms
+#   - ordinal logistic regression baseline (MASS::polr)
+#
+# Inputs:
+# - `train.csv` (semicolon-delimited)
+#
+# Outputs (written to `models/`):
+# - `quick_improvements_results.csv`
+#
+# Run:
+# - Rscript scripts/quick_improvements.R [train_csv_path]
+
 suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))

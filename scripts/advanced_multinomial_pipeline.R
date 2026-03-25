@@ -1,5 +1,24 @@
 #!/usr/bin/env Rscript
 
+# Purpose:
+# - Experimental pipeline for multinomial glmnet modeling that explores:
+#   - engineered features
+#   - interactions
+#   - class weighting
+#   - outlier identification / optional filtering
+#   - repeated splits (may take longer to run)
+#
+# Inputs:
+# - `train.csv` (semicolon-delimited)
+#
+# Outputs (written to `models/`):
+# - `advanced_multinomial_results.csv`
+# - `identified_outliers.csv`
+# - `identified_outliers_summary.csv`
+#
+# Run:
+# - Rscript scripts/advanced_multinomial_pipeline.R [train_csv_path]
+
 suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))

@@ -1,5 +1,20 @@
 #!/usr/bin/env Rscript
 
+# Purpose:
+# - Combine the red/white wine quality datasets into one CSV and add `is_red`.
+#
+# Inputs:
+# - `winequality-red.csv` (semicolon-delimited)
+# - `winequality-white.csv` (semicolon-delimited)
+# - If the above sources are missing, the script can fall back to an existing
+#   combined `train.csv` (must include `is_red`).
+#
+# Output:
+# - `data/processed/winequality_combined.csv`
+#
+# Run:
+# - Rscript scripts/combine_wine_datasets.R [red_csv white_csv output_csv]
+
 suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))

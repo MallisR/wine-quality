@@ -1,5 +1,22 @@
 #!/usr/bin/env Rscript
 
+# Purpose:
+# - Predict wine `quality` (multiclass) from physicochemical features using:
+#   1) multinomial logistic regression (nnet::multinom)
+#   2) multinomial ridge regression (glmnet, alpha=0)
+#   3) multinomial lasso regression (glmnet, alpha=1)
+#
+# Inputs:
+# - `train.csv` (semicolon-delimited) with columns including `quality` and `is_red`
+#
+# Outputs (written to `models/`):
+# - `multinomial_logit_*` (model/metrics/predictions)
+# - `multinomial_ridge_*` (model/metrics/predictions)
+# - `multinomial_lasso_*` (model/metrics/predictions)
+#
+# Run:
+# - Rscript scripts/train_multinomial_logit.R [train_csv_path]
+
 suppressWarnings(suppressMessages({
   args <- commandArgs(trailingOnly = TRUE)
 }))
