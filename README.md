@@ -129,6 +129,22 @@ Rscript scripts/quick_improvements.R
 Rscript scripts/run_manova_acidity.R
 ```
 
+## One-command runner (recommended)
+
+To run the full pipeline and generate a single consolidated summary table:
+
+```bash
+Rscript scripts/run_all.R
+```
+
+If you want to skip the (potentially slow) advanced pipeline:
+
+```bash
+Rscript scripts/run_all.R --skip-advanced
+```
+
+This writes `models/run_all_summary.csv`.
+
 ## Outputs
 
 Most outputs are written to `models/` as:
